@@ -387,9 +387,13 @@ enum dxil_component_type dxil_get_comp_type_from_prog_sig_type(enum dxil_prog_si
 enum dxil_resource_kind dxil_sampler_dim_to_resource_kind(enum glsl_sampler_dim dim, bool is_array);
 enum dxil_resource_kind dxil_get_resource_kind(const struct glsl_type *type);
 
+#ifdef CLANG_CL_ENABLED
+enum dxil_primitive_topology dxil_get_primitive_topology(unsigned topology);
+enum dxil_input_primitive dxil_get_input_primitive(unsigned primitive);
+#else
 enum dxil_primitive_topology dxil_get_primitive_topology(enum mesa_prim topology);
-
 enum dxil_input_primitive dxil_get_input_primitive(enum mesa_prim primitive);
+#endif
 
 const char *dxil_overload_suffix( enum overload_type overload);
 

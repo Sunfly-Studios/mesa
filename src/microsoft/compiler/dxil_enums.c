@@ -141,7 +141,11 @@ enum dxil_resource_kind dxil_get_resource_kind(const struct glsl_type *type)
    UNREACHABLE("unexpected glsl type");
 }
 
+#ifdef CLANG_CL_ENABLED
+enum dxil_input_primitive dxil_get_input_primitive(unsigned primitive)
+#else
 enum dxil_input_primitive dxil_get_input_primitive(enum mesa_prim primitive)
+#endif
 {
    switch (primitive) {
    case MESA_PRIM_POINTS:
@@ -159,7 +163,11 @@ enum dxil_input_primitive dxil_get_input_primitive(enum mesa_prim primitive)
    }
 }
 
+#ifdef CLANG_CL_ENABLED
+enum dxil_primitive_topology dxil_get_primitive_topology(unsigned topology)
+#else
 enum dxil_primitive_topology dxil_get_primitive_topology(enum mesa_prim topology)
+#endif
 {
    switch (topology) {
    case MESA_PRIM_POINTS:
