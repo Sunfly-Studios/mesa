@@ -26,6 +26,8 @@
 #include "nir_deref.h"
 #include <vulkan/vulkan_core.h>
 
+#include "drivers/d3d12/d3d12_godot_nir_bridge.h"
+
 static struct vtn_pointer*
 vtn_align_pointer(struct vtn_builder *b, struct vtn_pointer *ptr,
                   unsigned alignment)
@@ -1620,12 +1622,16 @@ var_decoration_cb(struct vtn_builder *b, struct vtn_value *val, int member,
 
    /* Handle decorations that apply to a vtn_variable as a whole */
    switch (dec->decoration) {
-   case SpvDecorationBinding:
-      vtn_var->binding = dec->operands[0];
-      vtn_var->explicit_binding = true;
-      return;
    case SpvDecorationDescriptorSet:
-      vtn_var->descriptor_set = dec->operands[0];
+   case SpvDecorationBinding:
+      if (dec->decoration == SpvDecorationDescriptorSet) {
+         vtn_var->orig_descriptor_set = dec->operands[0];
+      } else {
+         vtn_var->orig_binding = dec->operands[0];
+      }
+      vtn_var->descriptor_set = 0;
+	   vtn_var->binding = vtn_var->orig_descriptor_set * GODOT_NIR_DESCRIPTOR_SET_MULTIPLIER + vtn_var->orig_binding * GODOT_NIR_BINDING_MULTIPLIER;
+      vtn_var->explicit_binding = true;
       return;
    case SpvDecorationInputAttachmentIndex:
       vtn_var->input_attachment_index = dec->operands[0];

@@ -123,10 +123,11 @@ dxil_container_add_state_validation(struct dxil_container *c,
 
 bool
 dxil_container_add_module(struct dxil_container *c,
-                          const struct dxil_module *m);
+                          const struct dxil_module *m,
+                          uint64_t *bitcode_bit_offset);
 
 bool
-dxil_container_write(struct dxil_container *c, struct blob *blob);
+dxil_container_write(struct dxil_container *c, struct blob *blob, uint64_t *bitcode_bit_offset);
 
 #ifdef __cplusplus
 }

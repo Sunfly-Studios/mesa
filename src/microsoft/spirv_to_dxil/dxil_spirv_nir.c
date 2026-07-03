@@ -1058,30 +1058,7 @@ dxil_spirv_nir_passes(nir_shader *nir,
    NIR_PASS(_, nir, nir_lower_alu_to_scalar, NULL, NULL);
    NIR_PASS(_, nir, nir_opt_dce);
    NIR_PASS(_, nir, dxil_nir_lower_double_math);
-
-   {
-      bool progress;
-      do
-      {
-         progress = false;
-         NIR_PASS(progress, nir, nir_copy_prop);
-         NIR_PASS(progress, nir, nir_opt_copy_prop_vars);
-         NIR_PASS(progress, nir, nir_opt_deref);
-         NIR_PASS(progress, nir, nir_opt_dce);
-         NIR_PASS(progress, nir, nir_opt_undef);
-         NIR_PASS(progress, nir, nir_opt_constant_folding);
-         NIR_PASS(progress, nir, nir_opt_cse);
-         if (nir_opt_loop(nir)) {
-            progress = true;
-            NIR_PASS(progress, nir, nir_copy_prop);
-            NIR_PASS(progress, nir, nir_opt_dce);
-         }
-         NIR_PASS(progress, nir, nir_lower_vars_to_ssa);
-         NIR_PASS(progress, nir, nir_opt_algebraic);
-         NIR_PASS(progress, nir, nir_opt_dead_cf);
-         NIR_PASS(progress, nir, nir_opt_remove_phis);
-      } while (progress);
-   }
+   NIR_PASS(_, nir, nir_lower_vars_to_ssa);
 
    NIR_PASS(_, nir, nir_remove_dead_variables, nir_var_function_temp, NULL);
    NIR_PASS(_, nir, nir_split_struct_vars, nir_var_function_temp);

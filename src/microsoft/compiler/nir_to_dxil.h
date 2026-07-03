@@ -29,6 +29,8 @@
 #include "nir.h"
 #include "dxil_versions.h"
 
+typedef struct GodotNirCallbacks GodotNirCallbacks;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -87,6 +89,7 @@ struct nir_to_dxil_options {
    enum dxil_environment environment;
    enum dxil_shader_model shader_model_max;
    enum dxil_validator_version validator_version_max;
+   const GodotNirCallbacks *godot_nir_callbacks;
 };
 
 typedef void (*dxil_msg_callback)(void *priv, const char *msg);

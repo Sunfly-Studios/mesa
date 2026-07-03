@@ -331,7 +331,8 @@ dxil_container_add_state_validation(struct dxil_container *c,
 
 bool
 dxil_container_add_module(struct dxil_container *c,
-                          const struct dxil_module *m)
+                          const struct dxil_module *m,
+                          uint64_t *bitcode_bit_offset)
 {
    assert(m->buf.buf_bits == 0); // make sure the module is fully flushed
    uint32_t version = (m->shader_kind << 16) |
@@ -345,18 +346,22 @@ dxil_container_add_module(struct dxil_container *c,
    uint32_t bitcode_offset = 16;
    uint32_t bitcode_size = m->buf.blob.size;
 
-   return add_part_header(c, DXIL_DXIL, size) &&
+   if (!(add_part_header(c, DXIL_DXIL, size) &&
           blob_write_bytes(&c->parts, &version, sizeof(version)) &&
           blob_write_bytes(&c->parts, &uint32_size, sizeof(uint32_size)) &&
           blob_write_bytes(&c->parts, &magic, sizeof(magic)) &&
           blob_write_bytes(&c->parts, &dxil_version, sizeof(dxil_version)) &&
           blob_write_bytes(&c->parts, &bitcode_offset, sizeof(bitcode_offset)) &&
-          blob_write_bytes(&c->parts, &bitcode_size, sizeof(bitcode_size)) &&
-          blob_write_bytes(&c->parts, m->buf.blob.data, m->buf.blob.size);
+          blob_write_bytes(&c->parts, &bitcode_size, sizeof(bitcode_size))))
+      return false;
+
+   *bitcode_bit_offset += c->parts.size * 8;
+
+   return blob_write_bytes(&c->parts, m->buf.blob.data, m->buf.blob.size);
 }
 
 bool
-dxil_container_write(struct dxil_container *c, struct blob *blob)
+dxil_container_write(struct dxil_container *c, struct blob *blob, uint64_t *bitcode_bit_offset)
 {
    assert(blob->size == 0);
    if (!blob_write_bytes(blob, &DXIL_DXBC, sizeof(DXIL_DXBC)))
@@ -387,8 +392,12 @@ dxil_container_write(struct dxil_container *c, struct blob *blob)
    }
 
    if (!blob_write_bytes(blob, &c->num_parts, sizeof(c->num_parts)) ||
-       !blob_write_bytes(blob, part_offsets, sizeof(uint32_t) * c->num_parts) ||
-       !blob_write_bytes(blob, c->parts.data, c->parts.size))
+      !blob_write_bytes(blob, part_offsets, sizeof(uint32_t) * c->num_parts))
+      return false;
+
+   *bitcode_bit_offset += blob->size * 8;
+
+   if (!blob_write_bytes(blob, c->parts.data, c->parts.size))
       return false;
 
    return true;

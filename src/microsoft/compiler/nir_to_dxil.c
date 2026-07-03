@@ -44,6 +44,8 @@
 
 #include <stdint.h>
 
+#include "drivers/d3d12/d3d12_godot_nir_bridge.h"
+
 int debug_dxil = 0;
 
 static const struct debug_named_value
@@ -1226,6 +1228,8 @@ add_resource(struct ntd_context *ctx, enum dxil_resource_type type,
       /* No flags supported yet */
       resource_v1->resource_flags = 0;
    }
+
+   ctx->opts->godot_nir_callbacks->report_resource(layout->binding, layout->space, (uint32_t)type, ctx->opts->godot_nir_callbacks->data);
 }
 
 static const struct dxil_value *
@@ -4963,6 +4967,12 @@ emit_intrinsic(struct ntd_context *ctx, nir_intrinsic_instr *intr)
       return emit_load_unary_external_function(ctx, intr, "dx.op.startInstanceLocation",
                                                DXIL_INTR_START_INSTANCE_LOCATION, nir_type_int);
 
+   case nir_intrinsic_load_constant_non_opt: {
+      const struct dxil_value* value = get_src(ctx, &intr->src[0], 0, nir_type_uint);
+      store_def(ctx, &intr->def, 0, value);
+      return true;
+   }
+
    case nir_intrinsic_load_num_workgroups:
    case nir_intrinsic_load_workgroup_size:
    default:
@@ -6618,6 +6628,7 @@ nir_to_dxil(struct nir_shader *s, const struct nir_to_dxil_options *opts,
       MIN2(opts->shader_model_max & 0xffff, validator_version & 0xffff);
    ctx->mod.major_validator = validator_version >> 16;
    ctx->mod.minor_validator = validator_version & 0xffff;
+   ctx->mod.godot_nir_callbacks = opts->godot_nir_callbacks;
 
    if (s->info.stage <= MESA_SHADER_FRAGMENT) {
       uint64_t in_mask =
@@ -6773,18 +6784,22 @@ nir_to_dxil(struct nir_shader *s, const struct nir_to_dxil_options *opts,
       goto out;
    }
 
-   if (!dxil_container_add_module(&container, &ctx->mod)) {
+   uint64_t bitcode_bit_offset = 0;
+
+   if (!dxil_container_add_module(&container, &ctx->mod, &bitcode_bit_offset)) {
       debug_printf("D3D12: failed to write module\n");
       retval = false;
       goto out;
    }
 
-   if (!dxil_container_write(&container, blob)) {
+   if (!dxil_container_write(&container, blob, &bitcode_bit_offset)) {
       debug_printf("D3D12: dxil_container_write failed\n");
       retval = false;
       goto out;
    }
    dxil_container_finish(&container);
+
+   opts->godot_nir_callbacks->report_bitcode_bit_offset_fn(bitcode_bit_offset, opts->godot_nir_callbacks->data);
 
    if (debug_dxil & DXIL_DEBUG_DUMP_BLOB) {
       static int shader_id = 0;

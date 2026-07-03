@@ -30,6 +30,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+typedef struct GodotNirCallbacks GodotNirCallbacks;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -234,6 +236,7 @@ spirv_to_dxil(const uint32_t *words, size_t word_count,
               const struct dxil_spirv_debug_options *debug_options,
               const struct dxil_spirv_runtime_conf *conf,
               const struct dxil_spirv_logger *logger,
+              const GodotNirCallbacks *godot_nir_callbacks,
               struct dxil_spirv_object *out_dxil);
 
 /**

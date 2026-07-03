@@ -32,6 +32,8 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include "drivers/d3d12/d3d12_godot_nir_bridge.h"
+
 void
 dxil_module_init(struct dxil_module *m, void *ralloc_ctx)
 {
@@ -2667,6 +2669,12 @@ emit_consts(struct dxil_module *m)
          if (!emit_undef_value(m))
             return false;
          continue;
+      }
+
+      if (curr_type->type == TYPE_INTEGER && (c->int_value & GODOT_NIR_SC_SENTINEL_MAGIC_MASK) == GODOT_NIR_SC_SENTINEL_MAGIC) {
+         uint32_t sc_id = (uint32_t)(c->int_value & ~GODOT_NIR_SC_SENTINEL_MAGIC_MASK);
+         uint64_t sc_bit_offset = (uint64_t)m->buf.blob.size * 8 + m->buf.buf_bits + m->buf.abbrev_width;
+         m->godot_nir_callbacks->report_sc_bit_offset_fn(sc_id, sc_bit_offset, m->godot_nir_callbacks->data);
       }
 
       switch (curr_type->type) {

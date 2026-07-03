@@ -29,6 +29,8 @@
 #ifndef DXIL_MODULE_H
 #define DXIL_MODULE_H
 
+typedef struct GodotNirCallbacks GodotNirCallbacks;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -268,6 +270,8 @@ struct dxil_module {
    struct rb_tree *functions;
 
    struct dxil_func_def *cur_emitting_func;
+
+   const GodotNirCallbacks *godot_nir_callbacks;
 };
 
 struct dxil_instr;

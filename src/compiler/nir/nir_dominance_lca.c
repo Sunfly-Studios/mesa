@@ -167,7 +167,7 @@ nir_dominance_lca(nir_block *b1, nir_block *b2)
    uint32_t i1 = dom_lca_representative(b1);
    uint32_t i2 = dom_lca_representative(b2);
    if (i1 > i2)
-      SWAP(i1, i2);
+      MESA_SWAP(i1, i2);
    uint32_t index = range_minimum_query(&impl->dom_lca_info.table, i1, i2 + 1);
    nir_block *result = impl->dom_lca_info.block_from_idx[index];
 

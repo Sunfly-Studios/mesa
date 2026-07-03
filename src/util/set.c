@@ -691,7 +691,7 @@ _mesa_set_intersects(struct set *a, struct set *b)
 
    /* iterate over the set with less entries */
    if (b->entries < a->entries) {
-      SWAP(a, b);
+      MESA_SWAP(a, b);
    }
 
    set_foreach(a, entry) {

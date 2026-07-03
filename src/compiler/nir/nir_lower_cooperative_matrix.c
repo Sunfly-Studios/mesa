@@ -530,7 +530,7 @@ split_cmat_load_store(nir_builder *b,
          col_offset = (i / split->num_col_splits) * desc.rows;
 
          if (layout == GLSL_MATRIX_LAYOUT_ROW_MAJOR)
-            SWAP(row_offset, col_offset);
+            MESA_SWAP(row_offset, col_offset);
 
          ptr_deref = nir_build_deref_cast(b, &addr_deref->def, addr_deref->modes, scalar_type, elem_size);
          stride = nir_udiv_imm(b, nir_imul_imm(b, stride, deref_bytes_size), elem_size);

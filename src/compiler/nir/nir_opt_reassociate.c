@@ -118,7 +118,7 @@ get_pair_key(nir_op op, nir_scalar a, nir_scalar b)
    if ((a.def->index > b.def->index) ||
        ((a.def->index == b.def->index) && (a.comp > b.comp))) {
 
-      SWAP(a, b);
+      MESA_SWAP(a, b);
    }
 
    return (struct pair_key){
@@ -460,8 +460,8 @@ reassociate_chain(struct chain *c, void *pair_freq)
 
       if (best_pair.i != best_pair.j) {
          /* Pin the best pair at the front. The rest is sorted by rank. */
-         SWAP(c->srcs[0], c->srcs[best_pair.i]);
-         SWAP(c->srcs[1], c->srcs[best_pair.j]);
+         MESA_SWAP(c->srcs[0], c->srcs[best_pair.i]);
+         MESA_SWAP(c->srcs[1], c->srcs[best_pair.j]);
          pinned = 2;
       }
    }

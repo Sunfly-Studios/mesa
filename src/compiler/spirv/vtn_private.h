@@ -243,6 +243,8 @@ typedef bool (*vtn_instruction_handler)(struct vtn_builder *, SpvOp,
 void vtn_build_cfg(struct vtn_builder *b, const uint32_t *words,
                    const uint32_t *end);
 void vtn_function_emit(struct vtn_builder *b, struct vtn_function *func,
+                       vtn_instruction_handler preamble_instruction_handler,
+                       const uint32_t *preamble_words,
                        vtn_instruction_handler instruction_handler);
 void vtn_handle_function_call(struct vtn_builder *b, SpvOp opcode,
                               const uint32_t *w, unsigned count);
@@ -521,6 +523,8 @@ struct vtn_variable {
    unsigned descriptor_set;
    unsigned binding;
    bool explicit_binding;
+   unsigned orig_descriptor_set;
+   unsigned orig_binding;
    unsigned offset;
    unsigned input_attachment_index;
 
@@ -594,6 +598,9 @@ struct vtn_value {
       struct vtn_ssa_value *ssa;
       vtn_instruction_handler ext_handler;
    };
+
+   bool is_sc;
+   uint32_t sc_id;
 };
 
 #define VTN_DEC_DECORATION -1

@@ -32,6 +32,8 @@
 #include "git_sha1.h"
 #include "vulkan/vulkan.h"
 
+#include "drivers/d3d12/d3d12_godot_nir_bridge.h"
+
 static_assert((mesa_shader_stage)DXIL_SPIRV_SHADER_NONE == MESA_SHADER_NONE, "must match");
 static_assert((mesa_shader_stage)DXIL_SPIRV_SHADER_VERTEX == MESA_SHADER_VERTEX, "must match");
 static_assert((mesa_shader_stage)DXIL_SPIRV_SHADER_TESS_CTRL == MESA_SHADER_TESS_CTRL, "must match");
@@ -50,6 +52,7 @@ spirv_to_dxil(const uint32_t *words, size_t word_count,
               const struct dxil_spirv_debug_options *dgb_opts,
               const struct dxil_spirv_runtime_conf *conf,
               const struct dxil_spirv_logger *logger,
+              const GodotNirCallbacks *godot_nir_callbacks,
               struct dxil_spirv_object *out_dxil)
 {
    if (stage == DXIL_SPIRV_SHADER_NONE || stage == DXIL_SPIRV_SHADER_KERNEL)
@@ -61,6 +64,7 @@ spirv_to_dxil(const uint32_t *words, size_t word_count,
       .environment = DXIL_ENVIRONMENT_VULKAN,
       .shader_model_max = conf->shader_model_max,
       .validator_version_max = validator_version_max,
+      .godot_nir_callbacks = godot_nir_callbacks,
    };
 
    const struct spirv_to_nir_options *spirv_opts = dxil_spirv_nir_get_spirv_options();

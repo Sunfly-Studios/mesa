@@ -763,6 +763,8 @@ vtn_emit_cf_func_unstructured(struct vtn_builder *b, struct vtn_function *func,
 
 void
 vtn_function_emit(struct vtn_builder *b, struct vtn_function *func,
+                  vtn_instruction_handler preamble_instruction_handler,
+                  const uint32_t *preamble_words,
                   vtn_instruction_handler instruction_handler)
 {
    static int force_unstructured = -1;
@@ -776,6 +778,9 @@ vtn_function_emit(struct vtn_builder *b, struct vtn_function *func,
    b->func = func;
    b->nb.exact = b->exact;
    b->phi_table = _mesa_pointer_hash_table_create(b);
+
+   const uint32_t *word_end = b->spirv + b->spirv_word_count;
+   vtn_foreach_instruction(b, preamble_words, word_end, preamble_instruction_handler);
 
    if (b->shader->info.stage == MESA_SHADER_KERNEL || force_unstructured) {
       impl->structured = false;
