@@ -35,6 +35,8 @@
 
 #include "ralloc.h"
 
+#include "drivers/d3d12/d3d12_godot_nir_bridge.h"
+
 #define CANARY 0x5A1106
 
 #if defined(__LP64__) || defined(_WIN64)
@@ -115,7 +117,7 @@ ralloc_size(const void *ctx, size_t size)
     *  - Allocations of a size that rounds up to a multiple of 8 bytes and
     *    not 16 bytes, are only required to have at least 8 byte alignment.
     */
-   void *block = malloc(align64(size + sizeof(ralloc_header),
+   void *block = godot_nir_malloc(align64(size + sizeof(ralloc_header),
                                 alignof(ralloc_header)));
    ralloc_header *info;
    ralloc_header *parent;
@@ -164,7 +166,7 @@ resize(void *ptr, size_t size)
    ralloc_header *child, *old, *info;
 
    old = get_header(ptr);
-   info = realloc(old, align64(size + sizeof(ralloc_header),
+   info = godot_nir_realloc(old, align64(size + sizeof(ralloc_header),
                                alignof(ralloc_header)));
 
    if (info == NULL)
@@ -323,7 +325,7 @@ unsafe_free(ralloc_header *info)
    if (info->destructor != NULL)
       info->destructor(PTR_FROM_HEADER(info));
 
-   free(info);
+   godot_nir_free(info);
 }
 
 void
