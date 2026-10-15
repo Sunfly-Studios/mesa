@@ -106,12 +106,53 @@ load_coord(nir_builder *b, nir_deref_instr *deref,
    }
 }
 
+static const struct glsl_type *
+get_texture_type_for_image(const struct glsl_type *type)
+{
+   if (glsl_type_is_array(type)) {
+      const struct glsl_type *elem_type =
+         get_texture_type_for_image(glsl_get_array_element(type));
+      return glsl_array_type(elem_type, glsl_get_length(type), 0 /*explicit size*/);
+   }
+
+   assert((glsl_type_is_image(type)));
+   return glsl_texture_type(glsl_get_sampler_dim(type),
+                            glsl_sampler_type_is_array(type),
+                            glsl_get_sampler_result_type(type));
+}
+
+static bool
+replace_image_type_with_texture(nir_deref_instr *deref)
+{
+   const struct glsl_type *type = deref->type;
+
+   /* If we've already chased up the deref chain this far from a different intrinsic, we're done */
+   if (!glsl_type_is_image(glsl_without_array(type)))
+      return false;
+
+   deref->type = get_texture_type_for_image(type);
+   deref->modes = nir_var_uniform;
+   if (deref->deref_type == nir_deref_type_var) {
+      type = deref->var->type;
+      if (glsl_type_is_image(glsl_without_array(type))) {
+         deref->var->type = get_texture_type_for_image(type);
+         deref->var->data.mode = nir_var_uniform;
+         memset(&deref->var->data.sampler, 0, sizeof(deref->var->data.sampler));
+      }
+   } else {
+      nir_deref_instr *parent = nir_deref_instr_parent(deref);
+      if (parent)
+         replace_image_type_with_texture(parent);
+   }
+
+   return true;
+}
+
 static bool
 try_lower_input_load(nir_builder *b, nir_intrinsic_instr *load,
                      const nir_input_attachment_options *options)
 {
    nir_deref_instr *deref = nir_src_as_deref(load->src[0]);
-   assert(glsl_type_is_image(deref->type));
 
    enum glsl_sampler_dim image_dim = glsl_get_sampler_dim(deref->type);
    if (image_dim != GLSL_SAMPLER_DIM_SUBPASS &&
@@ -171,6 +212,7 @@ try_lower_input_load(nir_builder *b, nir_intrinsic_instr *load,
       nir_def_rewrite_uses(&load->def,
                            &tex->def);
    }
+   replace_image_type_with_texture(deref);
 
    return true;
 }
@@ -203,6 +245,8 @@ try_lower_input_texop(nir_builder *b, nir_tex_instr *tex,
    tex->coord_components = 3;
 
    nir_src_rewrite(&tex->src[coord_src_idx].src, coord);
+
+   replace_image_type_with_texture(deref);
 
    return true;
 }
